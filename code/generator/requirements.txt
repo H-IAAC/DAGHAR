@@ -1,0 +1,6 @@
+numpy
+pandas
+scipy
+tqdm
+plotly
+natsort
