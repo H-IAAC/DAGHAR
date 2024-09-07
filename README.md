@@ -2,7 +2,29 @@
 
 This is the official repository for the DAGHAR dataset, available at [Zenodo](https://zenodo.org/records/11992126). It contains scripts to read, process, and standardize datasets in order to generate DAGHAR dataset. It also allows extending the DAGHAR dataset with new datasets, using the same processing and standardization steps.
 
-## Directory Structure
+## Quick Run
+
+To generate the `raw_balanced` and `standartized_balanced` views of the DAGHAR dataset, you must:
+
+1. Clone this repository;
+2. Download the original datasets using the `download_original_data.sh` script;
+3. Install the required packages using the `requirements.txt` file;
+4. Run the `dataset_generator.py` script.
+
+This can be done using the following commands (in a Unix-like system):
+
+```bash
+git clone https://github.com/H-IAAC/DAGHAR.git DAGHAR
+cd DAGHAR
+./download_original_data.sh
+pip install -r requirements.txt
+python dataset_generator.py
+```
+
+This will generate the `raw_balanced` and `standartized_balanced` views of the DAGHAR dataset in the `data/views` directory.
+Below we provide more details on how to extend the DAGHAR dataset with new datasets.
+
+## Downloading the Original Datasets
 
 The repository is organized as follows:
 
@@ -15,18 +37,17 @@ DAGHAR/
 │   │   ├── RealWord/
 │   │   ├── UCI/
 │   │   └── WISDM/
-├── processing_scripts/
-│   ├── dataset_generator.py
-│   ├── dataset_processor.py
-│   └── dataset_standardizer.py
+├── steps.py
+├── pipelines.py
+├── readers.py
+├── dataset_generator.py
+├── requirements.txt
+├── download_original_data.sh
 ├── README.md
 └── LICENSE
 ```
 
-The `data` directory contains the original datasets, as they are downloaded from their respective sources. The `processing_scripts` directory contains the scripts used to process and standardize the datasets, generating the `standartized_balanced` and `raw_balanced` directories, that is, the standardized and raw balanced views of DAGHAR, respectively.
-
-
-### Downloading the Original Datasets
+The `data` directory contains the original datasets, as they are downloaded from their respective sources. 
 
 In order to generate the DAGHAR views, you must download the original datasets, decompress them, and place them in the `data/original` directory, inside the respective dataset directory.
 To facilitate this process, we provide a shell script named `download_original_data.sh`. This script downloads the datasets and decompresses them in the correct directory. 
@@ -52,42 +73,76 @@ We used the following datasets:
 - **WISDM**, from "Weiss, G.M., Yoneda, K. and Hayajneh, T., 2019. Smartphone and smartwatch-based biometrics using activities of daily living. Ieee Access, 7, pp.133190-133202". Distributed under CC BY 4.0. [Download link](https://archive.ics.uci.edu/dataset/507/wisdm+smartphone+and+smartwatch+activity+and+biometrics+dataset)
 
 
+## Generate the DAGHAR Datasets
 
-## Dataset Generation Process
+### Pre-requisites
 
-To generate the datasets, you can run the `dataset_generator.py` and `inter_dataset_balancer.py` files, which is in this directory. This file generates the `raw` and `standartized` views that can be unbalanced, intra_balanced (balanced per activity), and inter_balanced (balanced per activity and user), that is, all users have the same number of samples per activity. For generate inter_balanced views,  that balances each dataset based the minimum number of classes per split (train, validation or test), of all datasets, you must run the file `inter_dataset_balancer.py`.
+To generate the DAGHAR datasets, you must have python 3.8 or higher installed in your system. To install the required packages, run the following command:
 
-The order is very important, to run `inter_dataset_balancer.py` you need the intra_balanced datasets, so if you don't have these views on your machine, you should first run `dataset_generator.py` file and then run the `inter_dataset_balancer.py` file.
+```bash
+pip install -r requirements.txt
+```
 
-## Standardization Process
+### Generate the Datasets
 
-The standardization process also called the standardization pipeline, comprises the execution of several steps (operations) per dataset.
-Each dataset has its standardization pipeline, as they are different from each other. 
-The operators are all defined in the `dataset_processor.py` file. The operators are defined as classes, and each class has a `__call__` method, which receives a pandas dataframe and returns a pandas dataframe. The `__call__` method is the operator's implementation.
+To generate the `raw_balanced` and `standartized_balanced` views from original datasets, we provide a python script named `dataset_generator.py`. 
+You can run the script using the following command:
 
----
+```bash
+python dataset_generator.py
+```
 
-**NOTE**
+This file generates the `raw` and `standartized` views of the datasets at the `data/processed` directory. This process may take a while, depending on the dataset size and the number of views to be generated.
 
-- The order of the operators is important, as some operators may require columns that may be added from other operators (which must run before).
-- Seldom, some operators may return multiple pandas Dataframes. 
 
----
+## Extending the DAGHAR Dataset
 
-The standardization codes from `dataset_generator.py` file usually comprise the following steps (**this is not a strict rule**):
+The standardization process is a pipeline that comprises several steps to standardize the datasets. The pipeline is dataset-specific, as each dataset has its own standardization process.
+Thus, scripts is mainly divided in two parts: read the dataset and standardize the dataset.
+The first part is dataset-specific, as it reads the dataset and generates a pandas dataframe with all the data. The second part is most dataset-agnostic, as it standardizes the dataset using a pipeline of operations. We provide a set of operators that are used in the standardization process, such as resampling, windowing, and adding labels. We also encourage the user to create new operators that may be useful in the standardization process and to reuse the operators in other datasets.
 
-1. Load the datasets and generate a single pandas dataframe with all the data, where each row represents a single instant of capture (and now a window). The loading is a dataset-specific process. The dataframe generated **usually** have the following columns (**this is not a rule**):
-- A column for the x-axis acceleration (`accel-x` column); y-axis acceleration (`accel-y` column); z-axis acceleration (`accel-z` column); gyroscope x-axis (`gyro-x` column); gyroscope y-axis (`gyro-y` column); gyroscope z-axis (`gyro-z` column); and the timestamp from the accelerometer (`accel-timestamp`) and gyroscope (`gyro-timestamp`), if provided.
-- A column for the label (`activity code` column).
-- A column for the user id (`user` column), if provided.
-- A column for x-axis gravity (`gravity-x` column); y-axis gravity (`gravity-y` column); and z-axis gravity (`gravity-z` column) if provided.
-- A serial column, which represents the attempt that the collection was made (`serial` column), if provided. For instance, if the user has a time series running in the morning and another in the afternoon, it will be two different serial numbers.
-- A CSV or file column, which represents the file that the row was extracted from (`csv` column). 
-- An index column, that is, a column that represents the row index from the CSV file (`index` column).
-- Any other column that may be useful for the standardization process or metadata.
-2. Create the operator objects.
-3. Crete the pipeline object, passing the operator object list as parameters.
-4. Execute the pipeline, passing the dataframe as a parameter.
+### Reading the Dataset
+
+Reading the dataset is a dataset-specific process. It involves reading the CSV files, concatenating them, and generating a **single pandas dataframe** with all the data. 
+The resultant dataframe has a row for each **instant of capture** (and not a window). The columns of the dataframe are dataset-specific, but they, at least, must contain the following columns (required ones):
+- Accelerometer x-axis (`accel-x` column); y-axis (`accel-y` column); z-axis (`accel-z` column);
+- Gyroscope x-axis (`gyro-x` column); y-axis (`gyro-y` column); z-axis (`gyro-z` column);
+- Timestamp from the accelerometer (`accel-start-time` column) and gyroscope (`gyro-strrt-time` column);
+- Label (`activity code` column);
+- The user id (`user` column);
+- The trial id (`serial` column), that is the trial associated with the time instant, as one user may have multiple trials;
+- The index of the time instant within a user's trial (`index` column);
+- The file that the row was extracted from (`csv` column);
+
+The dataframe may also contain other metadata information (additional columns, along the required ones), which is dataset-specific and can be discarded (or used) during the standardization process.
+
+
+All functions that read the datasets are defined in the `readers.py` file. 
+Each reader is a function that receives the dataset directory path and returns a pandas dataframe.
+Thus, in order to extend the DAGHAR dataset with a new dataset, you must create a new reader function in the `readers.py` file.
+
+
+### Creating Pipelines
+
+As datasets have different formats, the standardization process is dataset-specific. 
+For instance, the standardization process for the `KuHar` dataset involves resampling the data to 20Hz and creating 3-second windows, while the standardization process for the `WISDM` dataset involves passing a butterworth filter, resampling the data to 20Hz, and creating 3-second windows.
+Thus, each dataset has its own sequence of steps which we call `Pipeline`.
+
+The steps are simple operations such as resampling, windowing, and adding labels. Each step is a class, in `steps.py` file, that implements the `__call__` method, which receives a pandas dataframe and returns a pandas dataframe. The `__call__` method is the operator's implementation.
+The pipeline is composed of a sequence of steps an  is defined in the `pipeline.py` file.
+
+To extend the DAGHAR dataset with a new dataset, you must create a new pipeline and add it to the `pipelines.py` file, under the `pipelines` dictionary. The key of the dictionary is the dataset name, and the value is the pipeline object. If you need other steps then the ones provided, you must create new operators and add them to the `steps.py` file.
+
+> **NOTE** The order of the operators is important, as some operators may require columns that may be added from other operators (which must run before).
+
+### Standardizing the Dataset
+
+The main standardization process is done in the `dataset_generator.py` file, which standardizes the dataset using the pipeline defined in the `pipelines.py` file.
+In fact, this file is the main entrypoint for user interaction, as it generates the `raw_balanced` and `standartized_balanced` views of the dataset.
+It will responsible to run over all the datasets and pipelines, generating the views.
+
+
+#### Interactive Example
 
 The following code snippet illustrates a fictitious standardization process for the `KuHar` dataset that resamples it to 20Hz and creates 3-second windows (**using this kind of code and operators is not a rule**):
 
@@ -102,7 +157,7 @@ def read_kuhar(kuhar_dir_path: str) -> pd.DataFrame:
 # 1. Load the datasets and generate a single pandas dataframe with all the data
 # -----------------------------------------------------------------------------
 
-dataframe = read_kuhar("../data/original/KuHar/1.Raw_time_domian_data")
+dataframe = read_kuhar("data/original/KuHar/1.Raw_time_domian_data")
 
 # -----------------------------------------------------------------------------
 # 2. Create operaators
@@ -149,13 +204,10 @@ windowizer = Windowize(
 # Create the pipeline
 # 1. Resample the data
 # 2. Create the windows
-# 3. Add a column wit activity code
 pipeline = Pipeline(
     [
-        differ,
         resampler,
         windowizer,
-        standard_label_adder
     ]
 )
 
@@ -166,13 +218,11 @@ pipeline = Pipeline(
 standartized_dataset = pipeline(dataframe)
 ```
 
-The example above is to read and preprocess a dataset, in the `dataset_generator.py` file there a dictionary with a specific pipeline for each dataset and view. 
-
 The pipeline operators are usually shared with other datasets, as they are generic.
 
-## Extending the DAGHAR Dataset
+## License
 
-....
+This repository is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 
 ## Citation
