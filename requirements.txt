@@ -1,0 +1,4 @@
+natsort
+numpy
+pandas
+scipy
