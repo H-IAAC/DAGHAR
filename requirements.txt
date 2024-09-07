@@ -1,4 +1,5 @@
-natsort
 numpy
 pandas
 scipy
+tqdm
+natsort
