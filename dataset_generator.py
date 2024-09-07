@@ -229,6 +229,7 @@ def main(datasets_to_process: List[str], output_path: str):
     output_path : str
         The path to save the datasets.
     """
+    output_path = Path(output_path)
     # Creating the datasets
     for dataset in datasets_to_process:
         print(f"Preprocessing the dataset {dataset} ...\n")
