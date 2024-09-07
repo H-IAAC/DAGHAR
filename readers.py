@@ -828,14 +828,15 @@ def sanity_function(train_df, val_df, test_df):
                     )
                     != tam
                 ):
-                    print(
-                        f"User {user} has different size for activity {activity}"
-                    )
+                    # print(
+                    #     f"User {user} has different size for activity {activity}"
+                    # )
                     flag = False
         if flag:
-            print(
-                f"All users have the same size per activity in {name} dataset - Samples per user and activity: {tam}"
-            )
+            # print(
+            #     f"All users have the same size per activity in {name} dataset - Samples per user and activity: {tam}"
+            # )
+            pass
 
     users = train_df["user"].unique()
     activities = train_df["standard activity code"].unique()
