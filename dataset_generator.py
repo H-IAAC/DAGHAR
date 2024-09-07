@@ -86,7 +86,7 @@ dataset_readers: Dict[str, callable] = {
 # Preprocess the datasets
 
 # Path to save the datasets
-output_path: Path = Path("data/datasets")
+# output_path: Path = Path("data/datasets")
 
 balancer_activity: object = BalanceToMinimumClass(
     class_column="standard activity code"
@@ -273,7 +273,7 @@ def main(datasets_to_process: List[str], output_path: str):
                             new_df_standardized,
                             dataset,
                             path_balanced=output_path / f"raw_balanced",
-                            path_balanced_standardized=output_path / f"{view_name}",
+                            path_balanced_standardized=output_path / f"{view_name}_balanced",
                         )
                         positions = new_df["position"].unique()
                         for position in list(positions):
@@ -288,8 +288,8 @@ def main(datasets_to_process: List[str], output_path: str):
                                 new_df_filtered,
                                 new_df_standardized_filtered,
                                 new_dataset,
-                                path_balanced=output_path  / f"{view_name}_balanced",
-                                path_balanced_standardized=output_path / f"{view_name}_balanced_standardized",
+                                path_balanced=output_path  / f"raw_balanced",
+                                path_balanced_standardized=output_path / f"{view_name}_balanced",
                             )
                 except Exception as e:
                     print(
@@ -325,7 +325,7 @@ def main(datasets_to_process: List[str], output_path: str):
                             new_df_standardized,
                             dataset,
                             path_balanced=output_path / f"raw_balanced",
-                            path_balanced_standardized=output_path / f"{view_name}",
+                            path_balanced_standardized=output_path / f"{view_name}_balanced",
                         )
                 except Exception as e:
                     print(

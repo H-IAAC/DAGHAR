@@ -181,7 +181,7 @@ pipelines: Dict[str, Dict[str, Pipeline]] = {
             ]
         ),
         # KuHar standardized dataset 20hz with poly resample
-        "standardized_dataset": Pipeline(
+        "standardized": Pipeline(
             [
                 ResamplerPoly(
                     features_to_select=feature_columns["KuHar"],
@@ -217,7 +217,7 @@ pipelines: Dict[str, Dict[str, Pipeline]] = {
             ]
         ),
         # MotionSense standardized dataset 20hz with poly resample
-        "standardized_dataset": Pipeline(
+        "standardized": Pipeline(
             [
                 RenameColumns(columns_map=columns_to_rename["MotionSense"]),
                 AddGravityColumn(
@@ -264,7 +264,7 @@ pipelines: Dict[str, Dict[str, Pipeline]] = {
             ]
         ),
         # WISDM standardized dataset 20hz with poly resample
-        "standardized_dataset": Pipeline(
+        "standardized": Pipeline(
             [
                 ButterworthFilter(
                     axis_columns=["accel-x", "accel-y", "accel-z"],
@@ -301,7 +301,7 @@ pipelines: Dict[str, Dict[str, Pipeline]] = {
             ]
         ),
         # UCI standardized dataset 20hz with poly resample
-        "standardized_dataset": Pipeline(
+        "standardized": Pipeline(
             [
                 Convert_G_to_Ms2(
                     axis_columns=["accel-x", "accel-y", "accel-z"]
@@ -343,7 +343,7 @@ pipelines: Dict[str, Dict[str, Pipeline]] = {
             ]
         ),
         # + RealWorld standardized dataset 20hz with poly resample
-        "standardized_dataset": Pipeline(
+        "standardized": Pipeline(
             [
                 ButterworthFilter(
                     axis_columns=["accel-x", "accel-y", "accel-z"],
