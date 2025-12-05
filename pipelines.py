@@ -38,6 +38,7 @@ column_group: Dict[str, str] = {
     "WISDM": ["user", "activity code", "window"],
     "UCI": ["user", "activity code", "serial"],
     "RealWorld": ["user", "activity code", "position"],
+    "HuGaDB": "csv"
 }
 
 standard_activity_code_map: Dict[str, Dict[Union[str, int], int]] = {
@@ -97,6 +98,20 @@ standard_activity_code_map: Dict[str, Dict[Union[str, int], int]] = {
         12: -1,  # lie to stand
     },
     "RealWorld": standard_activity_code_realworld_map,
+    "HuGaDB": {
+        1: 2,   # Walking
+        2: 5,   # Running
+        3: 3,   # Stair Up
+        4: 4,   # Stair Down
+        5: 0,   # Sitting
+        6: -1,  # Sitting down -> Remove (Transition)
+        7: -1,  # Standing up -> Remove (Transition)
+        8: 1,   # Standing
+        9: -1,  # Bicycling -> Remove (Not in DAGHAR)
+        10: -1, # Elevator up -> Remove
+        11: -1, # Elevator down -> Remove
+        12: 0,  # Sitting in car -> Sitting
+    }
 }
 
 standard_activity_code_names: Dict[int, str] = {
@@ -122,6 +137,13 @@ columns_to_rename = {
     "WISDM": None,
     "UCI": None,
     "RealWorld": None,
+    "HuGaDB": {"acc_rt_x": "accel-x",
+               "acc_rt_y": "accel-y", 
+               "acc_rt_z": "accel-z",
+               "gyro_rt_x": "gyro-x", 
+               "gyro_rt_y": "gyro-y", 
+               "gyro_rt_z": "gyro-z",
+    }
 }
 
 feature_columns: Dict[str, List[str]] = {
@@ -150,6 +172,7 @@ feature_columns: Dict[str, List[str]] = {
         "gyro-y",
         "gyro-z",
     ],
+    "HuGaDB": ["accel-x", "accel-y", "accel-z", "gyro-x", "gyro-y", "gyro-z"]
 }
 
 match_columns: Dict[str, List[str]] = {
@@ -161,6 +184,7 @@ match_columns: Dict[str, List[str]] = {
     "RealWorld_thigh": ["user", "window", "activity code", "position"],
     "RealWorld_upperarm": ["user", "window", "activity code", "position"],
     "RealWorld_waist": ["user", "window", "activity code", "position"],
+    "HuGaDB": ["csv", "user", "activity code", "serial"],
 }
 
 
@@ -366,5 +390,37 @@ pipelines: Dict[str, Dict[str, Pipeline]] = {
                 ),
             ]
         ),
+    },
+    "HuGaDB": {
+        "raw_dataset": Pipeline([
+            RenameColumns(columns_map=columns_to_rename["HuGaDB"]),
+            Windowize(
+                features_to_select=feature_columns["HuGaDB"],
+                samples_per_window=150,
+                samples_per_overlap=0,
+                groupby_column=column_group["HuGaDB"]
+            ),
+            AddStandardActivityCode(standard_activity_code_map["HuGaDB"]),
+        ]),
+        "standardized": Pipeline([
+            RenameColumns(columns_map=columns_to_rename["HuGaDB"]),
+            ButterworthFilter(
+                axis_columns=["accel-x", "accel-y", "accel-z", "gyro-x", "gyro-y", "gyro-z"],
+                fs=50,
+            ),
+            ResamplerPoly(
+                features_to_select=feature_columns["HuGaDB"],
+                up=2,
+                down=5,
+                groupby_column=column_group["HuGaDB"]
+            ),
+            Windowize(
+                features_to_select=feature_columns["HuGaDB"],
+                samples_per_window=60,
+                samples_per_overlap=0,
+                groupby_column=column_group["HuGaDB"]
+            ),
+            AddStandardActivityCode(standard_activity_code_map["HuGaDB"]),
+        ]),
     },
 }

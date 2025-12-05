@@ -30,6 +30,7 @@ from readers import (
     read_realworld,
     sanity_function,
     real_world_organize,
+    read_hugadb
 )
 
 """This module is used to generate the datasets. The datasets are generated in the following steps:    
@@ -72,6 +73,7 @@ dataset_paths: Dict[str, str] = {
     "WISDM": "WISDM/wisdm-dataset/raw/phone",
     "UCI": "UCI/RawData",
     "RealWorld": "RealWorld/realworld2016_dataset",
+    "HuGaDB": "HuGaDB"
 }
 
 # Dictionary with datasets and their respesctive reader functions
@@ -81,6 +83,7 @@ dataset_readers: Dict[str, callable] = {
     "WISDM": read_wisdm,
     "UCI": read_uci,
     "RealWorld": read_realworld,
+    "HuGaDB": read_hugadb
 }
 
 # Preprocess the datasets
@@ -351,6 +354,7 @@ if __name__ == "__main__":
         "WISDM",
         "UCI",
         "RealWorld",
+        "HuGaDB",
     ]
     
     parser = argparse.ArgumentParser(description="Dataset Generator")

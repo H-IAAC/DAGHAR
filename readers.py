@@ -605,6 +605,71 @@ def read_realworld(workspace: str, users: List[str]) -> pd.DataFrame:
     return df
 
 
+def read_hugadb(hugadb_dir_path: str) -> pd.DataFrame:
+    """Read the HuGaDB dataset and return a DataFrame with the data.
+    
+    The HuGaDB dataset files usually contain a header with 4 lines:
+    Activity map, ActivityID map, Date and Column names (sensors)
+    
+    The data columns typically include:
+    - acc_rf_x, acc_rf_y, acc_rf_z (Right Foot Accelerometer)
+    - gyro_rf_x, gyro_rf_y, gyro_rf_z (Right Foot Gyroscope)
+    - ... (similar for Right Shin, Right Thigh, Left Foot, Left Shin, Left Thigh)
+    - EMG_r, EMG_l (EMG sensors)
+    - act (Activity ID)
+
+    Parameters
+    ----------
+    hugadb_dir_path : str
+        Path to the HuGaDB dataset directory containing .txt files
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame with the combined data from all HuGaDB files.   
+    """
+    hugadb_dir_path = Path(hugadb_dir_path)
+    dataframes = []
+
+    # Sorts to ensure reproducible order
+    files = natsorted(list(hugadb_dir_path.glob("*.txt")))
+
+    for file_path in files:
+        parts = file_path.stem.split("_")
+        
+        # Default values if parsing fails
+        user = "unknown"
+        serial = "0"
+        
+        if len(parts) >= 4:
+            user = parts[-2]
+            serial = parts[-1]
+
+        try:
+            # The file is tab-separated.
+            # The first 3 lines are metadata (#Activity, #ActivityID, #Date).
+            # The 4th line (index 3) contains the column headers.
+            df = pd.read_csv(file_path, sep="\t", header=3)
+            
+            df["user"] = user
+            df["serial"] = serial
+            df["csv"] = file_path.name
+            df["index"] = df.index
+
+            if "act" in df.columns:
+                df.rename(columns={"act": "activity code"}, inplace=True)
+            
+            dataframes.append(df)
+            
+        except Exception as e:
+            print(f"Error reading file {file_path.name}: {e}")
+
+    if not dataframes:
+        raise ValueError("No valid HuGaDB files found in the specified directory.")
+
+    return pd.concat(dataframes, ignore_index=True)
+
+
 def getfiles(user, activity, workspace, root):
     """This function will get the files from the real world dataset and move them to the realworld2016_dataset_organized folder
 
